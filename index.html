@@ -34,7 +34,6 @@
             overflow-x: hidden;
         }
 
-        /* Animated BG */
         .bg-particles {
             position: fixed;
             top: 0;
@@ -72,7 +71,6 @@
             z-index: 1;
         }
 
-        /* Header */
         .header {
             text-align: center;
             padding: 50px 20px 30px;
@@ -109,7 +107,7 @@
 
         @keyframes dotPulse {
             0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.7; }
+            50% { transform: scale(1.3); opacity: 0.7); }
         }
 
         .header .slogan {
@@ -133,7 +131,6 @@
             letter-spacing: 1px;
         }
 
-        /* Main Card */
         .main-card {
             background: var(--card-bg);
             border-radius: 20px;
@@ -324,7 +321,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Result */
         .result-box {
             background: rgba(46, 213, 115, 0.08);
             border: 1px solid rgba(46, 213, 115, 0.3);
@@ -360,6 +356,7 @@
             border-radius: 12px;
             padding: 14px 18px;
             direction: ltr;
+            flex-wrap: wrap;
         }
 
         .result-link {
@@ -370,6 +367,7 @@
             word-break: break-all;
             font-family: 'Courier New', monospace;
             letter-spacing: 0.5px;
+            min-width: 200px;
         }
 
         .btn-copy {
@@ -415,7 +413,6 @@
             color: black;
         }
 
-        /* Stats */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -478,7 +475,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Links Table */
         .links-section {
             margin-top: 25px;
         }
@@ -592,7 +588,6 @@
             opacity: 0.5;
         }
 
-        /* Toast */
         .toast {
             position: fixed;
             top: 20px;
@@ -637,7 +632,6 @@
             to { opacity: 0; transform: translateX(-50%) translateY(-30px); }
         }
 
-        /* Responsive */
         @media (max-width: 500px) {
             .domain-prefix {
                 font-size: 0.8rem;
@@ -697,7 +691,7 @@
             <div class="form-group">
                 <label>🔗 لینک اصلی (URL بلند)</label>
                 <input 
-                    type="url" 
+                    type="text" 
                     class="input-full" 
                     id="longUrl" 
                     placeholder="https://example.com/your-long-url-here..."
@@ -800,7 +794,22 @@
         // ============================================
 
         const STORAGE_KEY = 'gng_shortener_data';
-        const BASE_URL = 'gng.ir/';
+        const BASE_SHORT_URL = 'gng.ir/';
+
+        // ====== FIX: Add https:// automatically ======
+        function fixUrl(url) {
+            url = url.trim();
+            if (!url) return url;
+            
+            // If already has http:// or https://, return as is
+            if (/^https?:\/\//i.test(url)) {
+                return url;
+            }
+            
+            // Add https:// automatically
+            return 'https://' + url;
+        }
+        // =============================================
 
         // Load data from localStorage
         function loadData() {
@@ -859,11 +868,10 @@
                 return;
             }
 
-            // Add https:// if missing
-            if (!/^https?:\/\//i.test(longUrl)) {
-                longUrl = 'https://' + longUrl;
-                longUrlInput.value = longUrl;
-            }
+            // ====== FIX: Auto-add https:// ======
+            longUrl = fixUrl(longUrl);
+            longUrlInput.value = longUrl;
+            // ===================================
 
             // Validate URL format
             try {
@@ -917,7 +925,7 @@
                 const linkData = {
                     longUrl: longUrl,
                     slug: finalSlug,
-                    shortUrl: BASE_URL + finalSlug,
+                    shortUrl: BASE_SHORT_URL + finalSlug,
                     clicks: 0,
                     createdAt: now.toISOString(),
                     createdAtFormatted: now.toLocaleDateString('fa-IR', {
@@ -936,8 +944,12 @@
                 saveData(data);
 
                 // Show result
-                document.getElementById('resultLink').textContent = BASE_URL + finalSlug;
+                document.getElementById('resultLink').textContent = BASE_SHORT_URL + finalSlug;
+                
+                // ====== FIX: Test link now has https:// ======
                 document.getElementById('testLink').href = longUrl;
+                // ==============================================
+                
                 resultBox.classList.add('show');
 
                 // Reset form
@@ -1017,13 +1029,13 @@
                 saveData(data);
                 updateStats();
                 renderLinksTable();
-                showToast(`👆 کلیک روی لینک ${BASE_URL + slug} ثبت شد! (${data.links[slug].clicks} کلیک)`, 'success');
+                showToast(`👆 کلیک روی لینک ${BASE_SHORT_URL + slug} ثبت شد! (${data.links[slug].clicks} کلیک)`, 'success');
             }
         }
 
         // Delete link
         function deleteLink(slug) {
-            if (confirm(`آیا از حذف لینک "${BASE_URL + slug}" اطمینان دارید؟`)) {
+            if (confirm(`آیا از حذف لینک "${BASE_SHORT_URL + slug}" اطمینان دارید؟`)) {
                 let data = loadData();
                 if (data.links[slug]) {
                     const clicks = data.links[slug].clicks;
